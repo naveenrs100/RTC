@@ -1,0 +1,15 @@
+Liste des snapshots d’un stream : 
+Commande : scm list ss "e060_8X00_E" -r "https://rtcdedev:9443/ccm"; -u "xxx" -P "xxx"
+
+Comparaison entre deux streams, ici environnements Validation et Production  :
+Commande : scm compare stream "monstream" stream "un autre stream" -c "8X_SRC1" -f o -I f -r "https://rtcdedev:9443/ccm"; -u "xxx" -P "xxx”
+
+Récupération d’un fichier depuis stream :
+Commande : scm get file -w "mon stream integ" -c "8X_SRC1" -f "/8X_SRC1/8X_SRC1_BAS/000/0Z4269.cbl" 1 -o -r "https://rtcdedev:9443/ccm"; -u "xxx" -P "xxx" C:\xxxo\0Z4269.cbl
+
+Récupération attribut description d’un stream :
+Commande : scm get attributes -w "mon stream etude" --description -r "https://rtcdedev:9443/ccm"; -u "xxx" -P "xxx"
+
+Mise à jour attribut description d’un stream :
+Commande : scm set attributes -w "mon stream etude" --description "Environnement Etude" -r "https://rtcdedev:9443/ccm"; -u "xxx" -P "xxx"
+
