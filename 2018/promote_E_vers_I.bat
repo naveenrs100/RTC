@@ -1,14 +1,14 @@
 setlocal ENABLEDELAYEDEXPANSION
-@echo off
+rem @echo off
 
 REM Objet : Script de promotion du stream E vers le stream I
 REM Auteur : Philippe MOTTIER
 REM Date création : 28/03/2018
-REM Mise à jour : 19/04/2018
+REM Mise à jour : 24/04/2018
 REM Mise à jour : 
 
 Echo ==== Lancement Script promotion stream E vers stream I promote_E_vers_I.bat =============
-Echo Version du 19/04/2018
+Echo Version du 24/04/2018
 Echo Date lancement traitement  : %date%
 Echo Heure lancement traitement : %time%
 Echo Serveur de build           : %computername%
@@ -21,9 +21,17 @@ SET WI_DT=%1
 
 Echo =============================================================================================================
 
-REM Positionnement variables environnement de dev
+Echo Positionnement variables environnement de dev
 call D:\IBM\scripts\build_contexte_dev.bat
+
+Echo positoinnement variables complémentaires pour rtc scm
 set repsandNAS=F:\Vues_com\sandboxs_env
+
+Echo positoinnement variables complémentaires pour curl
+set repcurl=d:\ibm\curl
+set URLWI=https://rtc-dev:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/
+set HEADER="Accept: application/x-oslc-cm-change-request+xml"
+set COOKIES=%reptra%\cookies.txt
 
 :affic
 REM Affichage des variables
@@ -49,8 +57,58 @@ Echo Debut de traitement %date% - %time%
 
 if exist %reptra%\list_promo_e_i.txt del %reptra%\list_promo_e_i.txt
 echo Work Item DT : %WI_DT% > %reptra%\list_promo_e_i_arborescence.txt
+Echo ================================== TRAITEMENTS CURL DE WORK ITEM =============================================
 
-Echo =============================================================================================================
+
+Echo Requete cookie
+d:\ibm\curl\curl.exe -k -c %COOKIES% https://rtc-dev:9443/ccm/authenticated/identity
+Echo Login
+%repcurl%\curl.exe -k -L -b %COOKIES% -c %COOKIES% -d j_username=%userrtc% -d j_password=%pswrtc% https://rtc-dev:9443/ccm/authenticated/j_security_check
+ 
+Echo Requete WI
+%repcurl%\curl.exe -k -b %COOKIES% https://rtc-dev:9443/ccm/oslc/workitems/catalog
+
+Echo Acces work item DT
+d:\ibm\curl\curl.exe -k -b %COOKIES% -H %HEADER% %URLWI%%WI_DT%?oslc_cm.properties=rtc_cm:state rdf:resource > %reptra%/WI_%WI_DT%_DT.txt
+
+Echo Traitement etat WI DT ----------------------------------------------
+for /f  "tokens=1,2,3" %%i in (%reptra%/WI_%WI_DT%_DT.txt) do (
+set var1=%%i
+set var2=%%j
+set var3=%%k
+set retour=!var3:~-5!
+set typtmp=!var2:~-14!
+
+if !retour! EQU error (
+set messerr=WI DT non trouve
+goto :erreur
+)
+
+set typlig=!var1:~8,5!
+
+if !typlig! EQU state (
+
+echo Ligne de type etat wi dt
+
+set typwi=!typtmp:~0,2!
+echo Type de work item : !typwi!
+
+if !typwi! NEQ dt (
+set messerr=Le WI %WI_DT% n'est pas de type DT, trouve : !typwi!
+goto :erreur
+)
+
+set var2=%%j
+set travail=!var2:~-5!
+set etat=!travail:~0,2!
+call :cnvdt
+echo Le WI DT !WI_DT! a pour etat : !lietat!
+)
+)
+
+pause
+
+Echo ========================================= TRAITEMENT RTC SCM ================================================
 :connexion
 Echo Connexion a RTC - Etape 1 : %date% - %time%
 %repscm%\scm login -r "%refrtc%" -n "connexionrtc" -u "%userrtc%" -P "%pswrtc%" 
@@ -215,6 +273,61 @@ if !car! == ( (echo !repsource! !ent! >> %reptra%\list_promo_e_i.txt
 echo ------- Change : !var1! Fichier : !ent! >> %reptra%\list_promo_e_i_arborescence.txt
 )
 )
+
+:cnvdt
+set lietat=
+if !etat! EQU s1 goto :s1d 
+if !etat! EQU s2 goto :s2d 
+if !etat! EQU s3 goto :s3d 
+if !etat! EQU s4 goto :s4d 
+if !etat! EQU s5 goto :s5d 
+if !etat! EQU s6 goto :s6d 
+if !etat! EQU s7 goto :s7d 
+if !etat! EQU s8 goto :s8d 
+if !etat! EQU s9 goto :s9d 
+
+Echo Erreur sur l etat du WI DT: Etat !etat! Inconnu
+goto suitewidt
+
+:S1d
+set lietat=En Cours
+goto suitewidt
+
+:S2d
+set lietat=Publié
+goto suitewidt
+
+:S3d
+set lietat=Preview OK
+goto suitewidt
+
+:S4d
+set lietat=En Intégration
+goto suitewidt
+
+:S5d
+set lietat=Industrialisation
+goto suitewidt
+
+:S6d
+set lietat=En Validation
+goto suitewidt
+
+:S7d
+set lietat=Recette
+goto suitewidt
+
+:S8d
+set lietat=En Production
+goto suitewidt
+
+:S9d
+set lietat=En attente promotion dans I
+goto suitewidt
+
+:suitewidt
+
+exit /B 0
 
 exit /B 0
 
