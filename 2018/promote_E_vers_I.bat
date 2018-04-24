@@ -272,6 +272,8 @@ echo ------- Change : !var1! Fichier : !ent! >> %reptra%\list_promo_e_i_arboresc
 )
 )
 
+exit /B 0
+
 :cnvdt
 set lietat=
 if !etat! EQU s1 goto :s1d 
@@ -327,6 +329,6 @@ goto suitewidt
 
 exit /B 0
 
-exit /B 0
+
 
 endlocal
