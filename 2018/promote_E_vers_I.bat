@@ -3,9 +3,9 @@ rem @echo off
 
 REM Objet : Script de promotion du stream E vers le stream I
 REM Auteur : Philippe MOTTIER
-REM Date création : 28/03/2018
-REM Mise à jour : 24/04/2018
-REM Mise à jour : 
+REM Date crÃ©ation : 28/03/2018
+REM Mise Ã  jour : 24/04/2018
+REM Mise Ã  jour : 
 
 Echo ==== Lancement Script promotion stream E vers stream I promote_E_vers_I.bat =============
 Echo Version du 24/04/2018
@@ -16,7 +16,7 @@ Echo User Name RTC              : %username%
 
 
 REM =============================================================================================================
-REM Affectation des variables avec les parametres passés au script de build
+REM Affectation des variables avec les parametres passÃ©s au script de build
 SET WI_DT=%1
 
 Echo =============================================================================================================
@@ -24,10 +24,10 @@ Echo ===========================================================================
 Echo Positionnement variables environnement de dev
 call D:\IBM\scripts\build_contexte_dev.bat
 
-Echo positoinnement variables complémentaires pour rtc scm
+Echo positoinnement variables complÃ©mentaires pour rtc scm
 set repsandNAS=F:\Vues_com\sandboxs_env
 
-Echo positoinnement variables complémentaires pour curl
+Echo positoinnement variables complÃ©mentaires pour curl
 set repcurl=d:\ibm\curl
 set URLWI=https://rtc-dev:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/
 set HEADER="Accept: application/x-oslc-cm-change-request+xml"
@@ -106,8 +106,6 @@ echo Le WI DT !WI_DT! a pour etat : !lietat!
 )
 )
 
-pause
-
 Echo ========================================= TRAITEMENT RTC SCM ================================================
 :connexion
 Echo Connexion a RTC - Etape 1 : %date% - %time%
@@ -161,13 +159,13 @@ Echo A valider et le cas echeant a completer
 
 goto :Fin
 
-Echo Traitement terminé en  erreur - Etape 8 : %date% - %time%
+Echo Traitement terminÃ© en  erreur - Etape 8 : %date% - %time%
 :Erreur
 Echo ===============================================================================================
 Echo :                                                                                             :
 Echo :                                                                                             :
 Echo :                                                                                             :
-Echo :        Traitement terminé en erreur le %date% à %time%              
+Echo :        Traitement terminÃ© en erreur le %date% Ã  %time%              
 Echo :                                                                                             :
 Echo :        Erreur de build                                                                      :
 Echo :                                                                                             :
@@ -266,7 +264,7 @@ REM Alim repertoire source sandbox E
 SET repsource=\ENV-8X00-E\ENV-8X_SRC4\8X_SRC4_SHL\%premier%%deux%%trois%
 goto suite
 
-Echo Type de source non traité)
+Echo Type de source non traitÃ©)
 
 :suite
 if !car! == ( (echo !repsource! !ent! >> %reptra%\list_promo_e_i.txt
@@ -294,7 +292,7 @@ set lietat=En Cours
 goto suitewidt
 
 :S2d
-set lietat=Publié
+set lietat=PubliÃ©
 goto suitewidt
 
 :S3d
@@ -302,7 +300,7 @@ set lietat=Preview OK
 goto suitewidt
 
 :S4d
-set lietat=En Intégration
+set lietat=En IntÃ©gration
 goto suitewidt
 
 :S5d
