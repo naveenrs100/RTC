@@ -4,11 +4,11 @@ setlocal ENABLEDELAYEDEXPANSION
 REM Objet : Script de transfert du stream de developpement E1 vers le stream environnement E sources rpp
 REM Auteur : Philippe MOTTIER
 REM Date création : 26/02/2018
-REM Mise à jour : 19/04/2018
+REM Mise à jour : 24/04/2018
 REM Mise à jour : 
 
 Echo ==== Lancement Script transfert stream dev E1 vers stream env E build_transfert-E1_E_natif.bat =============
-Echo Version du 19/04/2018
+Echo Version du 24/04/2018
 Echo Date lancement traitement  : %date%
 Echo Heure lancement traitement : %time%
 Echo Serveur de build           : %computername%
@@ -24,9 +24,17 @@ SET WI_DT=%4
 
 Echo =============================================================================================================
 
-REM Positionnement variables environnement de dev
+Echo Positionnement variables environnement de dev
 call D:\IBM\scripts\build_contexte_dev.bat
+
+Echo positoinnement variables complémentaires pour rtc scm
 set repsandNAS=F:\Vues_com\sandboxs_env
+
+Echo positoinnement variables complémentaires pour curl
+set repcurl=d:\ibm\curl
+set URLWI=https://rtc-dev:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/
+set HEADER="Accept: application/x-oslc-cm-change-request+xml"
+set COOKIES=%reptra%\cookies.txt
 
 REM Premiere lettre du nom du source a transferer
 SET premier=%Source:~0,1%
@@ -52,9 +60,11 @@ set typerep=SRC1
 echo typerep : %typerep%
 echo  -- 8X_%typerep%_TRA
 set nomsource=%Source%.cbl
+
 REM Alim repertoire source sandbox E1
 SET repsoue1=%repsand%\8X00_E1_manu\8X_%typerep%_TRA\8X_%typerep%_%Type%\%premier%%premier%%premier%
 Echo repsoue1 : %repsoue1%
+
 REM Alim repertoire cible sandbox E
 SET repcibe=%repsandNAS%\ENV-8X00-E\ENV-8X_%typerep%\8X_%typerep%_%Type%\%premier%%premier%%premier%
 Echo repcibe : %repcibe%)
@@ -74,9 +84,11 @@ set typerep=SRC4
 set nomsource=%Source%.ksh
 echo typerep : %typerep%
 echo  -- 8X_%typerep%_TRA
+
 Echo Alim repertoire source sandbox E1
 SET repsoue1=%repsand%\8X00_E1_manu\8X_%typerep%_TRA\8X_%typerep%_%Type%\%premier%%deux%%trois%
 Echo repsoue1 : %repsoue1%
+
 Echo Alim repertoire cible sandbox E
 SET repcibe=%repsandNAS%\ENV-8X00-E\ENV-8X_%typerep%\8X_%typerep%_%Type%\%premier%%deux%%trois%
 Echo repcibe : %repcibe%)
@@ -120,7 +132,91 @@ Echo --Rep sandbox cible       : %repcibe%
 Echo =============================================================================================================
 Echo Debut de traitement %date% - %time%
 
-Echo =============================================================================================================
+Echo ================================== TRAITEMENTS CURL DE WORK ITEM =============================================
+
+Echo Requete cookie
+d:\ibm\curl\curl.exe -k -c %COOKIES% https://rtc-dev:9443/ccm/authenticated/identity
+Echo Login
+%repcurl%\curl.exe -k -L -b %COOKIES% -c %COOKIES% -d j_username=%userrtc% -d j_password=%pswrtc% https://rtc-dev:9443/ccm/authenticated/j_security_check
+ 
+Echo Requete WI
+%repcurl%\curl.exe -k -b %COOKIES% https://rtc-dev:9443/ccm/oslc/workitems/catalog
+
+Echo Acces work item DT
+d:\ibm\curl\curl.exe -k -b %COOKIES% -H %HEADER% %URLWI%%WI_DT%?oslc_cm.properties=rtc_cm:state rdf:resource > %reptra%/WI_%WI_DT%_DT.txt
+
+Echo Acces work item activite
+d:\ibm\curl\curl.exe -k -b %COOKIES% -H %HEADER% %URLWI%%WI_Activite%?oslc_cm.properties=rtc_cm:state rdf:resource > %reptra%/WI_%WI_Activite%_acti.txt
+
+Echo Traitement etat WI DT ----------------------------------------------
+for /f  "tokens=1,2,3" %%i in (%reptra%/WI_%WI_DT%_DT.txt) do (
+set var1=%%i
+set var2=%%j
+set var3=%%k
+set retour=!var3:~-5!
+set typtmp=!var2:~-14!
+
+if !retour! EQU error (
+set messerr=WI DT non trouve
+goto :erreur
+)
+
+set typlig=!var1:~8,5!
+
+if !typlig! EQU state (
+
+echo Ligne de type etat wi dt
+
+set typwi=!typtmp:~0,2!
+echo Type de work item : !typwi!
+
+if !typwi! NEQ dt (
+set messerr=Le WI %WI_DT% n'est pas de type DT, trouve : !typwi!
+goto :erreur
+)
+
+set var2=%%j
+set travail=!var2:~-5!
+set etat=!travail:~0,2!
+call :cnvdt
+echo Le WI DT !WI_DT! a pour etat : !lietat!
+)
+)
+
+Echo Traitement etat WI Activite ---------------------------------------
+for /f  "tokens=1,2,3" %%i in (%reptra%/WI_%WI_Activite%_acti.txt) do (
+set var1=%%i
+set var2=%%j
+set var3=%%k
+set retour=!var3:~-5!
+set typtmp=!var2:~-14!
+
+if !retour! EQU error (
+set messerr=WI activite %WI_Activite% non trouve
+goto :erreur
+)
+
+set typlig=!var1:~8,5!
+
+if !typlig! EQU state (
+echo Ligne de type etat wi activite
+
+set typwi=!typtmp:~0,2!
+echo Type de work item : !typwi!
+
+if !typwi! NEQ ow (
+set messerr=Le WI %WI_Activite% n'est pas de type Activite, trouve : !typwi!
+goto :erreur
+)
+
+set travail=!var2:~-5!
+set etat=!travail:~0,2!
+call :cnvact
+echo Le WI Activite !WI_Activite! a pour etat : !lietat!
+)
+)
+
+Echo ========================================= TRAITEMENT RTC SCM ================================================
 :connexion
 Echo Connexion a RTC - Etape 1 : %date% - %time%
 %repscm%\scm login -r "%refrtc%" -n "connexionrtc" -u "%userrtc%" -P "%pswrtc%" 
@@ -144,29 +240,17 @@ Echo Reservation du stream ENV E - Etape 3 : %date% - %time%
 %repscm%\scm set attributes -w "ENV-8X00-E" --description "Reserve Etape 3" -r "connexionrtc"
 Echo Code retour : %ERRORLEVEL%
 
-:ctrlWIactiEX
-Echo =============================================================================================================
-Echo Controle existence WI activite - Etape 4a : %date% - %time%
-Echo Code retour : %ERRORLEVEL%
-Echo A completer
-
-:ctrlWIDTEX
-Echo =============================================================================================================
-Echo Controle existence WI DT - Etape 4b : %date% - %time%
-Echo Code retour : %ERRORLEVEL%
-Echo A completer
-
 :ctrlWIactiST
 Echo =============================================================================================================
 Echo Controle statut WI activite non ferme - Etape 5a : %date% - %time%
 Echo Code retour : %ERRORLEVEL%
-Echo A completer
+Echo A ne pas faire cf fait par le workflow a confirmer
 
 :ctrlWIDTST
 Echo =============================================================================================================
 Echo Controle statut WI DT cree - Etape 5b : %date% - %time%
 Echo Code retour : %ERRORLEVEL%
-Echo A completer
+Echo A ne pas faire cf fait par le workflow a confirmer
 
 :accept_E1
 Echo =============================================================================================================
@@ -323,6 +407,104 @@ EXIT /B 0
 :CONV_VAR_to_min
 FOR %%z IN (a b c d e f g h i j k l m n o p q r s t u v w x y z) DO CALL set %~1=%%%~1:%%z=%%z%%
 EXIT /B 0 
+
+:cnvdt
+set lietat=
+if !etat! EQU s1 goto :s1d 
+if !etat! EQU s2 goto :s2d 
+if !etat! EQU s3 goto :s3d 
+if !etat! EQU s4 goto :s4d 
+if !etat! EQU s5 goto :s5d 
+if !etat! EQU s6 goto :s6d 
+if !etat! EQU s7 goto :s7d 
+if !etat! EQU s8 goto :s8d 
+if !etat! EQU s9 goto :s9d 
+
+Echo Erreur sur l etat du WI DT: Etat !etat! Inconnu
+goto suitewidt
+
+:S1d
+set lietat=En Cours
+goto suitewidt
+
+:S2d
+set lietat=Publié
+goto suitewidt
+
+:S3d
+set lietat=Preview OK
+goto suitewidt
+
+:S4d
+set lietat=En Intégration
+goto suitewidt
+
+:S5d
+set lietat=Industrialisation
+goto suitewidt
+
+:S6d
+set lietat=En Validation
+goto suitewidt
+
+:S7d
+set lietat=Recette
+goto suitewidt
+
+:S8d
+set lietat=En Production
+goto suitewidt
+
+:S9d
+set lietat=En attente promotion dans I
+goto suitewidt
+
+:suitewidt
+
+exit /B 0
+
+
+
+:cnvact
+set lietat=
+if !etat! EQU s1 goto :s1a 
+if !etat! EQU s2 goto :s2a 
+if !etat! EQU s3 goto :s3a 
+if !etat! EQU s4 goto :s4a 
+if !etat! EQU s5 goto :s5a 
+if !etat! EQU s6 goto :s6a 
+
+rem Echo Erreur sur l etat du WI activité : Etat !etat! Inconnu
+goto suitewiact
+
+:S1a
+set lietat=Nouveau
+goto suitewiact
+
+:S2a
+set lietat=En cours
+goto suitewiact
+
+:S3a
+set lietat=Terminé
+goto suitewiact
+
+:S4a
+set lietat=Fermé
+goto suitewiact
+
+:S5a
+set lietat=Rouvert
+goto suitewiact
+
+:S6a
+set lietat=Trié
+goto suitewiact
+
+
+:suitewiact
+
+exit /B 0
 
 
 endlocal
