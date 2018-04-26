@@ -4,11 +4,11 @@ setlocal ENABLEDELAYEDEXPANSION
 REM Objet : Script de transfert du stream de developpement E1 vers le stream environnement E sources rpp
 REM Auteur : Philippe MOTTIER
 REM Date création : 26/02/2018
-REM Mise à jour : 24/04/2018
+REM Mise à jour : 25/04/2018
 REM Mise à jour : 
 
 Echo ==== Lancement Script transfert stream dev E1 vers stream env E build_transfert-E1_E_natif.bat =============
-Echo Version du 24/04/2018
+Echo Version du 25/04/2018
 Echo Date lancement traitement  : %date%
 Echo Heure lancement traitement : %time%
 Echo Serveur de build           : %computername%
@@ -57,41 +57,41 @@ REM Alim extension, rep source, rep cible et type rep SRCx
 if %Type%==BAS (
 Echo type BAS
 set typerep=SRC1
-echo typerep : %typerep%
-echo  -- 8X_%typerep%_TRA
-set nomsource=%Source%.cbl
+echo typerep : !typerep!
+echo  -- 8X_!typerep!_TRA
+set nomsource=!Source!.cbl
 
 REM Alim repertoire source sandbox E1
-SET repsoue1=%repsand%\8X00_E1_manu\8X_%typerep%_TRA\8X_%typerep%_%Type%\%premier%%premier%%premier%
-Echo repsoue1 : %repsoue1%
+SET repsoue1=!repsand!\8X00_E1_manu\8X_!typerep!_TRA\8X_!typerep!_!Type!\!premier!!premier!!premier!
+Echo repsoue1 : !repsoue1!
 
 REM Alim repertoire cible sandbox E
-SET repcibe=%repsandNAS%\ENV-8X00-E\ENV-8X_%typerep%\8X_%typerep%_%Type%\%premier%%premier%%premier%
-Echo repcibe : %repcibe%)
+SET repcibe=!repsandNAS!\ENV-8X00-E\ENV-8X_!typerep!\8X_!typerep!_!Type!\!premier!!premier!!premier!
+Echo repcibe : !repcibe!)
 
 
 if %Type%==SCR (
 set typerep=SRC2
-set nomsource=%Source%.scr)
+set nomsource=!Source!.scr)
 
 if %Type%==SRS (
 set typerep=SRC2
-set nomsource=%Source%.cbl)
+set nomsource=!Source!.cbl)
 
 if %Type%==SHL (
 Echo type SHL
 set typerep=SRC4
-set nomsource=%Source%.ksh
-echo typerep : %typerep%
-echo  -- 8X_%typerep%_TRA
+set nomsource=!Source!.ksh
+echo typerep : !typerep!
+echo  -- 8X_!typerep!_TRA
 
 Echo Alim repertoire source sandbox E1
-SET repsoue1=%repsand%\8X00_E1_manu\8X_%typerep%_TRA\8X_%typerep%_%Type%\%premier%%deux%%trois%
-Echo repsoue1 : %repsoue1%
+SET repsoue1=!repsand!\8X00_E1_manu\8X_!typerep!_TRA\8X_!typerep!_!Type!\!premier!!deux!!trois!
+Echo repsoue1 : !repsoue1!
 
 Echo Alim repertoire cible sandbox E
-SET repcibe=%repsandNAS%\ENV-8X00-E\ENV-8X_%typerep%\8X_%typerep%_%Type%\%premier%%deux%%trois%
-Echo repcibe : %repcibe%)
+SET repcibe=!repsandNAS!\ENV-8X00-E\ENV-8X_!typerep!\8X_!typerep!_!Type!\!premier!!deux!!trois!
+Echo repcibe : !repcibe!)
 
 
 
@@ -256,7 +256,11 @@ Echo A ne pas faire cf fait par le workflow a confirmer
 Echo =============================================================================================================
 Echo Lancement commande RTC SCM accept sandbox E1  - Etape 6 : %date% - %time%
 %repscm%\scm set attributes -w "ENV-8X00-E" --description "Reserve Etape 6 accept" -r "connexionrtc"
+
+echo debut commande accept === %time%
 %repscm%\scm accept -v -r "connexionrtc" -d "%repsand%/8X00_E1_manu" --overwrite-uncommitted
+echo fin commande accept === %time%
+
 Echo Fin de traitement RTC accept %date% - %time%
 
 :ctrlsrcdif
@@ -293,7 +297,9 @@ Echo Checkin fichier dans sandbox E  - Etape 10 : %date% - %time%
 REM -N pour ne pas scanner a la recherche de nouveaux changes
 REM --complete pour fermer le CS que l on cree et eviter des ajouts ulterieurs
 
+echo debut commande checkin === %time%
 %repscm%\scm checkin -N -d %repsandNAS%\ENV-8X00-E --comment "Transfert de E1 dans E" --complete -W %WI_DT% %repcibe%\%nomsource%
+echo fin commande checkin === %time%
 
 Echo Infos de debug statut sandbox E apres checkin ***************************************************
 %repscm%\scm show status -d %repsandNAS%\ENV-8X00-E -u "Admin_CC" -P "admc0504"
@@ -316,7 +322,10 @@ Echo A supprimer !!!!!!!!!!!!!!! Fait lors du checkin
 Echo =============================================================================================================
 Echo Deliver CS fichier dans stream E  - Etape 13 : %date% - %time%
 %repscm%\scm set attributes -w "ENV-8X00-E" --description "Reserve Etape 13 deliver" -r "connexionrtc"
+
+echo debut commande deliver === %time%
 %repscm%\scm deliver -W %WI_DT% -d %repsandNAS%\ENV-8X00-E -r "connexionrtc"
+echo fin commande deliver === %time%
 
 Echo Infos de debug statut sandbox E apres deliver ***************************************************
 %repscm%\scm show status -d %repsandNAS%\ENV-8X00-E -u "Admin_CC" -P "admc0504"
