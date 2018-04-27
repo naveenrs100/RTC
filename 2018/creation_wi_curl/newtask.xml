@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><oslc_cm:ChangeRequest xmlns:oslc_cm="http://open-services.net/xmlns/cm/1.0/" rdf:about="https://rtc-dev:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/207" xmlns:calm="http://jazz.net/xmlns/prod/jazz/calm/1.0/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/terms/" xmlns:oslc_pl="http://open-services.net/ns/pl#" xmlns:rtc_cm="http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/">
+<rtc_cm:ownedBy rdf:resource="https://rtc-dev.appli:9443/jts/users/phmo"/>
+<dc:description>ma description de tache phmo new</dc:description>
+<dc:title>ma tache phmo new en batch</dc:title>
+<oslc_cm:severity rdf:resource="https://rtc-dev:9443/ccm/oslc/enumerations/_fNE3QAXfEeWWeuXawK3zmQ/severity/severity.literal.l3"/>
+<dc:type rdf:resource="https://rtc-dev:9443/ccm/oslc/types/_fNE3QAXfEeWWeuXawK3zmQ/task"/>
+</oslc_cm:ChangeRequest>
